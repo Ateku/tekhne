@@ -6,12 +6,15 @@ const gpu = sdl3.gpu;
 const video = sdl3.video;
 const events = sdl3.events;
 const pipeline = @import("graphics/pipeline.zig");
-const Texture = @import("graphics/Texture.zig");
-const Model = @import("graphics/Model.zig");
+const Asset = @import("graphics/Asset.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
 pub fn main() !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
     try sdl3.init(.everything);
 
     sdl3.errors.error_callback = &sdl3.extras.sdlErrZigLog;
@@ -39,16 +42,8 @@ pub fn main() !void {
     );
     defer device.releaseGraphicsPipeline(graphic_pipeline);
 
-    const default_texture = try Texture.createFromPath(device, "assets/material.png");
-    defer default_texture.release(device);
-
-    const model = try Model.create(device, &.{
-        .{ .position = .{ -1, -1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 0, 0 } },
-        .{ .position = .{ -1, 1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 0, 1 } },
-        .{ .position = .{ 1, -1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 1, 0 } },
-        .{ .position = .{ 1, 1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 1, 1 } },
-    }, &.{ 2, 1, 0, 3, 1, 2 });
-    defer model.release(device);
+    const asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
+    defer asset.release(device);
 
     loop: while (true) {
         while (events.poll()) |event| {
@@ -72,8 +67,7 @@ pub fn main() !void {
             defer render_pass.end();
 
             render_pass.bindGraphicsPipeline(graphic_pipeline);
-            default_texture.bind(render_pass);
-            model.render(render_pass);
+            asset.render(render_pass);
         }
 
         try cmd_buf.submit();
