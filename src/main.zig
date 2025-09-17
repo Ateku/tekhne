@@ -6,6 +6,7 @@ const gpu = sdl3.gpu;
 const video = sdl3.video;
 const events = sdl3.events;
 const pipeline = @import("graphics/pipeline.zig");
+const Texture = @import("graphics/Texture.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -36,6 +37,9 @@ pub fn main() !void {
         debug_mode,
     );
     defer device.releaseGraphicsPipeline(graphic_pipeline);
+
+    const default_texture = try Texture.createFromPath(device, "assets/material.png");
+    defer default_texture.release(device);
 
     loop: while (true) {
         while (events.poll()) |event| {
