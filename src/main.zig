@@ -5,13 +5,12 @@ const shadercross = sdl3.shadercross;
 const gpu = sdl3.gpu;
 const video = sdl3.video;
 const events = sdl3.events;
+const pipeline = @import("graphics/pipeline.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
 pub fn main() !void {
     try sdl3.init(.everything);
-    defer sdl3.shutdown();
-    defer sdl3.quit(.everything);
 
     sdl3.errors.error_callback = &sdl3.extras.sdlErrZigLog;
     sdl3.log.setLogOutputFunction(void, &sdl3.extras.sdlLogZigLog, null);
@@ -27,6 +26,16 @@ pub fn main() !void {
     });
     defer window.deinit();
     try device.claimWindow(window);
+
+    const texture_format = try device.getSwapchainTextureFormat(window);
+    const graphic_pipeline = try pipeline.initGraphics(
+        device,
+        texture_format,
+        @embedFile("default.vert"),
+        @embedFile("default.frag"),
+        debug_mode,
+    );
+    defer device.releaseGraphicsPipeline(graphic_pipeline);
 
     loop: while (true) {
         while (events.poll()) |event| {
@@ -48,6 +57,8 @@ pub fn main() !void {
             };
             const render_pass = cmd_buf.beginRenderPass(&.{target_info}, null);
             defer render_pass.end();
+
+            render_pass.bindGraphicsPipeline(graphic_pipeline);
         }
 
         try cmd_buf.submit();
