@@ -1,0 +1,17 @@
+.{
+    .name = .tekhne,
+    .version = "0.0.0",
+    .fingerprint = 0x1ce62f2d485519be,
+    .minimum_zig_version = "0.16.0-dev.229+bfda12efc",
+    .dependencies = .{
+        .sdl3 = .{
+            .url = "https://codeload.github.com/Gota7/zig-sdl3/zip/refs/heads/shadercross",
+            .hash = "sdl3-0.1.1-NmT1Q2o_IQDLnKMtQKOj0Th-mlMsp26Q9EUbaosvc5EN",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
