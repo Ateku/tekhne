@@ -95,6 +95,15 @@ fn create(device: gpu.Device, surface: Surface) !Texture {
     };
 }
 
+pub fn bind(texture: Texture, render_pass: gpu.RenderPass) void {
+    const sampler: gpu.TextureSamplerBinding = .{
+        .texture = texture.texture,
+        .sampler = texture.sampler,
+    };
+
+    render_pass.bindFragmentSamplers(0, &.{sampler});
+}
+
 pub fn release(texture: Texture, device: gpu.Device) void {
     device.releaseTexture(texture.texture);
     device.releaseSampler(texture.sampler);

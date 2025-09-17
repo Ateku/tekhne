@@ -7,6 +7,7 @@ const video = sdl3.video;
 const events = sdl3.events;
 const pipeline = @import("graphics/pipeline.zig");
 const Texture = @import("graphics/Texture.zig");
+const Model = @import("graphics/Model.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -41,6 +42,14 @@ pub fn main() !void {
     const default_texture = try Texture.createFromPath(device, "assets/material.png");
     defer default_texture.release(device);
 
+    const model = try Model.create(device, &.{
+        .{ .position = .{ -1, -1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 0, 0 } },
+        .{ .position = .{ -1, 1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 0, 1 } },
+        .{ .position = .{ 1, -1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 1, 0 } },
+        .{ .position = .{ 1, 1, 0 }, .normal = .{ 0, 0, 0 }, .tex_coord = .{ 1, 1 } },
+    }, &.{ 2, 1, 0, 3, 1, 2 });
+    defer model.release(device);
+
     loop: while (true) {
         while (events.poll()) |event| {
             switch (event) {
@@ -63,6 +72,8 @@ pub fn main() !void {
             defer render_pass.end();
 
             render_pass.bindGraphicsPipeline(graphic_pipeline);
+            default_texture.bind(render_pass);
+            model.render(render_pass);
         }
 
         try cmd_buf.submit();
