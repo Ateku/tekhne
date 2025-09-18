@@ -14,8 +14,13 @@ extern var camera: extern struct {
     projection: math.Matrix,
 } addrspace(.uniform);
 
+extern var transform: extern struct {
+    mat: math.Matrix,
+} addrspace(.uniform);
+
 export fn main() callconv(.spirv_vertex) void {
     gpu.binding(&camera, 1, 0);
+    gpu.binding(&transform, 1, 1);
 
     gpu.location(&position_in, 0);
     gpu.location(&normal_in, 1);
@@ -27,7 +32,10 @@ export fn main() callconv(.spirv_vertex) void {
 
     gpu.position_out.* = matrix.mulVec(
         camera.projection,
-        matrix.mulVec(camera.view, position),
+        matrix.mulVec(
+            camera.view,
+            matrix.mulVec(transform.mat, position),
+        ),
     );
 
     tex_coord_out = tex_coord_in;
