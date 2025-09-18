@@ -55,6 +55,10 @@ pub const vector4 = struct {
     pub fn fromVector3(v: Vector3, w: f32) Vector4 {
         return .{ v[0], v[1], v[2], w };
     }
+
+    pub fn splat(s: f32) Vector4 {
+        return @splat(s);
+    }
 };
 
 pub const Matrix = [4]Vector4;

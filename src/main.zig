@@ -9,6 +9,7 @@ const pipeline = @import("graphics/pipeline.zig");
 const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
 const Transform = @import("core/Transform.zig");
+const Light = @import("graphics/Light.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -48,8 +49,15 @@ pub fn main() !void {
     defer asset.release(device);
 
     const camera: Camera = .new;
-    var trasform: Transform = .new;
-    trasform.position = .{ 1, 1, 0 };
+
+    var transform: Transform = .new;
+    // trasform.position = .{ 1, 1, 0 };
+    transform.rotation = .{ 45, 45, 0 };
+
+    const light: Light = .{
+        .position = .{ 0, 2, 1 },
+        .color = .{ 1, 1, 1 },
+    };
 
     loop: while (true) {
         while (events.poll()) |event| {
@@ -64,6 +72,7 @@ pub fn main() !void {
         const texture = swapchain_texture.texture orelse continue :loop;
 
         camera.pushData(cmd_buf, 800 / 600);
+        light.pushData(cmd_buf);
 
         {
             const target_info: gpu.ColorTargetInfo = .{
@@ -76,7 +85,7 @@ pub fn main() !void {
 
             render_pass.bindGraphicsPipeline(graphic_pipeline);
 
-            trasform.pushData(cmd_buf);
+            transform.pushData(cmd_buf);
             asset.render(render_pass);
         }
 
