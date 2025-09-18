@@ -1,5 +1,4 @@
-const std = @import("std");
-const degreesToRadians = std.math.degreesToRadians;
+pub const degreesToRadians = @import("std").math.degreesToRadians;
 
 pub const Vector3 = @Vector(3, f32);
 pub const vector3 = struct {
@@ -39,7 +38,7 @@ pub const vector3 = struct {
     pub fn normalize(v: Vector3) Vector3 {
         const length = magnitudeSquared(v);
 
-        return if (length == 0) 0 else v / splat(length);
+        return if (length == 0) v else v / splat(length);
     }
 
     pub fn cross(a: Vector3, b: Vector3) Vector3 {

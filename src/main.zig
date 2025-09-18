@@ -7,6 +7,7 @@ const video = sdl3.video;
 const events = sdl3.events;
 const pipeline = @import("graphics/pipeline.zig");
 const Asset = @import("graphics/Asset.zig");
+const Camera = @import("core/Camera.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -45,6 +46,8 @@ pub fn main() !void {
     const asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
     defer asset.release(device);
 
+    const camera: Camera = .new;
+
     loop: while (true) {
         while (events.poll()) |event| {
             switch (event) {
@@ -56,6 +59,8 @@ pub fn main() !void {
         const cmd_buf = try device.acquireCommandBuffer();
         const swapchain_texture = try cmd_buf.acquireSwapchainTexture(window);
         const texture = swapchain_texture.texture orelse continue :loop;
+
+        camera.pushData(cmd_buf, 800 / 600);
 
         {
             const target_info: gpu.ColorTargetInfo = .{

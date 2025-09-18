@@ -56,6 +56,11 @@ fn addShader(
             .root_source_file = b.path("src/graphics/shaders/" ++ name ++ ".zig"),
             .target = vulkan_target,
             .optimize = .ReleaseFast,
+            .imports = &.{
+                .{ .name = "math", .module = b.createModule(.{
+                    .root_source_file = b.path("src/core/math.zig"),
+                }) },
+            },
         }),
         .use_lld = false,
         .use_llvm = false,
