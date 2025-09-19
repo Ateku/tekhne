@@ -60,19 +60,19 @@ pub fn main() !void {
     defer asset.release(device);
     var transform: Transform = .{
         .position = .{ 0, 0, 0 },
-        .rotation = .{ 45, 45, 0 },
-        .scale = .{ 1, 1, 1 },
-    };
-
-    const light_asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
-    const light_transform: Transform = .{
-        .position = .{ 2, 2, 0 },
         .rotation = .{ 0, 0, 0 },
         .scale = .{ 1, 1, 1 },
     };
 
+    // const light_asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
+    // const light_transform: Transform = .{
+    //     .position = .{ -1, -1, 0 },
+    //     .rotation = .{ 0, 0, 0 },
+    //     .scale = .{ 1, 1, 1 },
+    // };
+
     const light: Light = .{
-        .position = .{ 0, 2, 1 },
+        .position = .{ 0, 0, 2 },
         .color = .{ 1, 1, 1 },
     };
 
@@ -136,8 +136,8 @@ pub fn main() !void {
             asset.render(render_pass);
 
             light.pushData(cmd_buf);
-            light_transform.pushData(cmd_buf);
-            light_asset.render(render_pass);
+            // light_transform.pushData(cmd_buf);
+            // light_asset.render(render_pass);
         }
 
         try cmd_buf.submit();
