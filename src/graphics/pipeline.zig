@@ -30,6 +30,7 @@ pub fn initGraphics(
         .vertex_shader = vertex_shader,
         .fragment_shader = fragment_shader,
         .target_info = .{
+            .depth_stencil_format = .depth32_float,
             .color_target_descriptions = &.{
                 .{
                     .format = texture_format,
@@ -44,6 +45,11 @@ pub fn initGraphics(
                     },
                 },
             },
+        },
+        .depth_stencil_state = .{
+            .enable_depth_test = true,
+            .enable_depth_write = true,
+            .compare = .less,
         },
         .vertex_input_state = .{
             .vertex_buffer_descriptions = &.{

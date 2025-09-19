@@ -45,24 +45,58 @@ pub fn main() !void {
     );
     defer device.releaseGraphicsPipeline(graphic_pipeline);
 
+    const window_size = try window.getSize();
+
+    const depth_texture = try device.createTexture(.{
+        .format = .depth32_float,
+        .usage = .{ .depth_stencil_target = true },
+        .width = @intCast(window_size.width),
+        .height = @intCast(window_size.height),
+        .layer_count_or_depth = 1,
+        .num_levels = 1,
+    });
+
     const asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
     defer asset.release(device);
+    var transform: Transform = .{
+        .position = .{ 0, 0, 0 },
+        .rotation = .{ 45, 45, 0 },
+        .scale = .{ 1, 1, 1 },
+    };
 
-    const camera: Camera = .new;
-
-    var transform: Transform = .new;
-    // trasform.position = .{ 1, 1, 0 };
-    transform.rotation = .{ 45, 45, 0 };
+    const light_asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
+    const light_transform: Transform = .{
+        .position = .{ 2, 2, 0 },
+        .rotation = .{ 0, 0, 0 },
+        .scale = .{ 1, 1, 1 },
+    };
 
     const light: Light = .{
         .position = .{ 0, 2, 1 },
         .color = .{ 1, 1, 1 },
     };
 
+    var camera: Camera = .new;
+
     loop: while (true) {
         while (events.poll()) |event| {
             switch (event) {
                 .quit, .terminating => break :loop,
+                .key_down => |keyboard| if (keyboard.key) |key| {
+                    switch (key) {
+                        .a => camera.position -= .{ 0.01, 0, 0 },
+                        .d => camera.position += .{ 0.01, 0, 0 },
+                        .space => camera.position += .{ 0, 0.01, 0 },
+                        .c => camera.position -= .{ 0, 0.01, 0 },
+                        .w => camera.position -= .{ 0, 0, 0.01 },
+                        .s => camera.position += .{ 0, 0, 0.01 },
+                        .q => camera.rotation -= .{ 0, 1, 0 },
+                        .e => camera.rotation += .{ 0, 1, 0 },
+                        .z => camera.rotation += .{ 1, 0, 0 },
+                        .x => camera.rotation -= .{ 1, 0, 0 },
+                        else => {},
+                    }
+                },
                 else => {},
             }
         }
@@ -71,22 +105,39 @@ pub fn main() !void {
         const swapchain_texture = try cmd_buf.acquireSwapchainTexture(window);
         const texture = swapchain_texture.texture orelse continue :loop;
 
-        camera.pushData(cmd_buf, 800 / 600);
-        light.pushData(cmd_buf);
+        camera.pushData(cmd_buf, 4 / 3);
 
         {
-            const target_info: gpu.ColorTargetInfo = .{
+            const color_target_info: gpu.ColorTargetInfo = .{
                 .texture = texture,
-                .clear_color = .{ .r = 0, .g = 0, .b = 0, .a = 1 },
+                .clear_color = .{ .r = 0.1, .g = 0.1, .b = 0.1, .a = 1 },
                 .load = .clear,
             };
-            const render_pass = cmd_buf.beginRenderPass(&.{target_info}, null);
+            const depth_stencil_target_info: gpu.DepthStencilTargetInfo = .{
+                .texture = depth_texture,
+                .load = .clear,
+                .clear_depth = 1,
+                .store = .do_not_care,
+                .clear_stencil = 1,
+                .stencil_load = .do_not_care,
+                .stencil_store = .do_not_care,
+                .cycle = true,
+            };
+
+            const render_pass = cmd_buf.beginRenderPass(
+                &.{color_target_info},
+                depth_stencil_target_info,
+            );
             defer render_pass.end();
 
             render_pass.bindGraphicsPipeline(graphic_pipeline);
 
             transform.pushData(cmd_buf);
             asset.render(render_pass);
+
+            light.pushData(cmd_buf);
+            light_transform.pushData(cmd_buf);
+            light_asset.render(render_pass);
         }
 
         try cmd_buf.submit();
