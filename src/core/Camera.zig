@@ -11,7 +11,7 @@ const Camera = @This();
 position: math.Vector3 = .{ 0, 0, 3 },
 rotation: math.Vector3 = .{ 0, 90, 0 },
 
-fov: f32 = 90.0,
+fov: f32 = 60,
 near: f32 = 0.1,
 far: f32 = 1000.0,
 
