@@ -35,6 +35,10 @@ pub fn main() !void {
     });
     defer window.deinit();
     try device.claimWindow(window);
+    // set unlimited frames;
+    try device.setSwapchainParameters(window, .sdr, .immediate);
+
+    var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .unlimited = undefined } };
 
     const texture_format = try device.getSwapchainTextureFormat(window);
     const graphic_pipeline = try pipeline.initGraphics(
@@ -65,13 +69,6 @@ pub fn main() !void {
         .scale = .{ 1, 1, 1 },
     };
 
-    // const light_asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
-    // const light_transform: Transform = .{
-    //     .position = .{ -1, -1, 0 },
-    //     .rotation = .{ 0, 0, 0 },
-    //     .scale = .{ 1, 1, 1 },
-    // };
-
     const light: Light = .{
         .position = .{ 0, 0, 4 },
         .color = .{ 1, 1, 1 },
@@ -80,6 +77,7 @@ pub fn main() !void {
     var camera: Camera = .new;
 
     loop: while (true) {
+        std.log.info("{}", .{1 / capper.delay()});
         while (events.poll()) |event| {
             switch (event) {
                 .quit, .terminating => break :loop,
@@ -103,7 +101,7 @@ pub fn main() !void {
         }
 
         const cmd_buf = try device.acquireCommandBuffer();
-        const swapchain_texture = try cmd_buf.acquireSwapchainTexture(window);
+        const swapchain_texture = try cmd_buf.waitAndAcquireSwapchainTexture(window);
         const texture = swapchain_texture.texture orelse continue :loop;
 
         camera.pushData(cmd_buf, 4 / 3);
@@ -137,8 +135,6 @@ pub fn main() !void {
             asset.render(render_pass);
 
             light.pushData(cmd_buf);
-            // light_transform.pushData(cmd_buf);
-            // light_asset.render(render_pass);
         }
 
         try cmd_buf.submit();
