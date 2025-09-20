@@ -10,6 +10,7 @@ const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
 const Transform = @import("core/Transform.zig");
 const Light = @import("graphics/Light.zig");
+const math = @import("core/math.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -60,7 +61,7 @@ pub fn main() !void {
     defer asset.release(device);
     var transform: Transform = .{
         .position = .{ 0, 0, 0 },
-        .rotation = .{ 0, 0, 0 },
+        .rotation = .{ 45, 45, 0 },
         .scale = .{ 1, 1, 1 },
     };
 
@@ -72,7 +73,7 @@ pub fn main() !void {
     // };
 
     const light: Light = .{
-        .position = .{ 0, 0, 2 },
+        .position = .{ 0, 0, 4 },
         .color = .{ 1, 1, 1 },
     };
 

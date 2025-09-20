@@ -2,6 +2,7 @@ const std = @import("std");
 const gpu = std.gpu;
 const math = @import("math");
 const vector3 = math.vector3;
+const vector4 = math.vector4;
 const matrix = math.matrix;
 
 extern var position_in: @Vector(3, f32) addrspace(.input);
@@ -41,7 +42,10 @@ export fn main() callconv(.spirv_vertex) void {
         matrix.mulVec(camera.view, model),
     );
 
+    const normalv4 = vector4.fromVector3(normal_in, 0);
+    const transformed_normal = matrix.mulVec(transform.mat, normalv4);
+
     position_out = vector3.fromVector4(model);
-    normal_out = vector3.normalize(normal_in);
+    normal_out = vector3.fromVector4(transformed_normal);
     tex_coord_out = tex_coord_in;
 }
