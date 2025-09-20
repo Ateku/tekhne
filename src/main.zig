@@ -10,6 +10,7 @@ const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
 const Transform = @import("core/Transform.zig");
 const Light = @import("graphics/Light.zig");
+const Material = @import("graphics/Material.zig");
 const math = @import("core/math.zig");
 
 const debug_mode = builtin.mode == .Debug;
@@ -65,17 +66,23 @@ pub fn main() !void {
     defer asset.release(device);
     var transform: Transform = .{
         .position = .{ 0, 0, 0 },
-        .rotation = .{ 45, 45, 0 },
+        .rotation = .{ 0, 0, 0 },
         .scale = .{ 1, 1, 1 },
     };
 
     const light: Light = .{
-        .position = .{ 0, 0, 4 },
+        .position = .{ 0.0, 0.0, 6 },
         .color = .{ 1, 1, 1 },
+    };
+
+    const material: Material = .{
+        .ambient = .{ 1, 0.5, 0.31 },
+        .diffuse = .{ 1, 0.5, 0.31 },
     };
 
     var camera: Camera = .new;
 
+    const ms: f32 = 0.05;
     loop: while (true) {
         std.log.info("{}", .{1 / capper.delay()});
         while (events.poll()) |event| {
@@ -83,12 +90,12 @@ pub fn main() !void {
                 .quit, .terminating => break :loop,
                 .key_down => |keyboard| if (keyboard.key) |key| {
                     switch (key) {
-                        .a => camera.position -= .{ 0.01, 0, 0 },
-                        .d => camera.position += .{ 0.01, 0, 0 },
-                        .space => camera.position += .{ 0, 0.01, 0 },
-                        .c => camera.position -= .{ 0, 0.01, 0 },
-                        .w => camera.position -= .{ 0, 0, 0.01 },
-                        .s => camera.position += .{ 0, 0, 0.01 },
+                        .a => camera.position -= .{ ms, 0, 0 },
+                        .d => camera.position += .{ ms, 0, 0 },
+                        .space => camera.position += .{ 0, ms, 0 },
+                        .c => camera.position -= .{ 0, ms, 0 },
+                        .w => camera.position -= .{ 0, 0, ms },
+                        .s => camera.position += .{ 0, 0, ms },
                         .q => camera.rotation -= .{ 0, 1, 0 },
                         .e => camera.rotation += .{ 0, 1, 0 },
                         .z => camera.rotation += .{ 1, 0, 0 },
@@ -104,7 +111,7 @@ pub fn main() !void {
         const swapchain_texture = try cmd_buf.waitAndAcquireSwapchainTexture(window);
         const texture = swapchain_texture.texture orelse continue :loop;
 
-        camera.pushData(cmd_buf, 4 / 3);
+        camera.pushData(cmd_buf, 1.333);
 
         {
             const color_target_info: gpu.ColorTargetInfo = .{
@@ -131,10 +138,11 @@ pub fn main() !void {
 
             render_pass.bindGraphicsPipeline(graphic_pipeline);
 
+            light.pushData(cmd_buf);
+            material.pushData(cmd_buf);
+
             transform.pushData(cmd_buf);
             asset.render(render_pass);
-
-            light.pushData(cmd_buf);
         }
 
         try cmd_buf.submit();
