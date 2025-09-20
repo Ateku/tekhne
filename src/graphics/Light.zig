@@ -7,7 +7,8 @@ const math = @import("../core/math.zig");
 const Light = @This();
 
 position: math.Vector3,
-color: math.Vector3,
+ambient: math.Vector3,
+diffuse: math.Vector3,
 
 pub fn pushData(light: Light, cmd_buf: gpu.CommandBuffer) void {
     cmd_buf.pushFragmentUniformData(1, mem.asBytes(&.{light}));

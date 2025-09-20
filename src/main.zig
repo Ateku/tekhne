@@ -72,7 +72,8 @@ pub fn main() !void {
 
     const light: Light = .{
         .position = .{ 0.0, 0.0, 6 },
-        .color = .{ 1, 1, 1 },
+        .ambient = .{ 0.2, 0.2, 0.2 },
+        .diffuse = .{ 0.5, 0.5, 0.5 },
     };
 
     const material: Material = .{

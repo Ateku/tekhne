@@ -16,7 +16,8 @@ extern var camera: extern struct {
 
 extern var light: extern struct {
     position: @Vector(3, f32),
-    color: @Vector(3, f32),
+    ambient: @Vector(3, f32),
+    diffuse: @Vector(3, f32),
 } addrspace(.uniform);
 
 extern var material: extern struct {
@@ -58,11 +59,11 @@ export fn main() callconv(.spirv_fragment) void {
 
     gpu.location(&color_out, 0);
 
-    const ambient = light.color * material.ambient;
+    const ambient = light.ambient * material.ambient;
 
     const light_direction = vector3.normalize(light.position - position_in);
     const diffuse_value = @max(vector3.dot(normal_in, light_direction), 0.0);
-    const diffuse = light.color * vector3.splat(diffuse_value) * material.diffuse;
+    const diffuse = light.diffuse * vector3.splat(diffuse_value) * material.diffuse;
 
     const light_result = diffuse + ambient;
 
