@@ -1,5 +1,15 @@
 pub const degreesToRadians = @import("std").math.degreesToRadians;
 
+pub fn sqrt(x: f32) f32 {
+    //TODO check and handle x <= 0
+    //TODO check and handle x == 0
+    var s = x; //initial guess
+    inline for (0..3) |_| {
+        s = (s + x / s) * 0.5;
+    }
+    return s;
+}
+
 pub const Vector3 = @Vector(3, f32);
 pub const vector3 = struct {
     pub const zero: Vector3 = .{ 0, 0, 0 };
@@ -28,7 +38,7 @@ pub const vector3 = struct {
     }
 
     pub fn magnitude(v: Vector3) f32 {
-        return @sqrt(dot(v, v));
+        return sqrt(dot(v, v));
     }
 
     pub fn magnitudeSquared(v: Vector3) f32 {
