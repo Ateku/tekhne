@@ -36,7 +36,7 @@ pub const vector3 = struct {
     }
 
     pub fn normalize(v: Vector3) Vector3 {
-        const length = magnitudeSquared(v);
+        const length = magnitude(v);
 
         return if (length == 0) v else v / splat(length);
     }

@@ -66,12 +66,17 @@ pub fn main() !void {
     defer asset.release(device);
     var transform: Transform = .{
         .position = .{ 0, 0, 0 },
+        .rotation = .{ 45, 0, 0 },
+        .scale = .{ 1, 1, 1 },
+    };
+    var transform2: Transform = .{
+        .position = .{ 3, 2, 0 },
         .rotation = .{ 0, 0, 0 },
         .scale = .{ 1, 1, 1 },
     };
 
     const light: Light = .{
-        .position = .{ 0.0, 0.0, 6 },
+        .position = .{ 0.0, 0.0, 3 },
         .ambient = .{ 0.2, 0.2, 0.2 },
         .diffuse = .{ 0.5, 0.5, 0.5 },
     };
@@ -143,6 +148,9 @@ pub fn main() !void {
             material.pushData(cmd_buf);
 
             transform.pushData(cmd_buf);
+            asset.render(render_pass);
+
+            transform2.pushData(cmd_buf);
             asset.render(render_pass);
         }
 

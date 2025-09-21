@@ -11,25 +11,25 @@ const Camera = @This();
 position: math.Vector3 = .{ 0, 0, 3 },
 rotation: math.Vector3 = .{ 0, 90, 0 },
 
-fov: f32 = 60,
+fov: f32 = 75,
 near: f32 = 0.1,
 far: f32 = 1000.0,
 
 pub const new: Camera = .{};
 
-pub fn getForwardVector(camera: Camera) math.Vector3 {
+pub fn pushData(camera: Camera, cmd_buf: gpu.CommandBuffer, aspect: f32) void {
     const x_rot = math.degreesToRadians(camera.rotation[0]);
     const y_rot = math.degreesToRadians(camera.rotation[1]);
 
-    return vector3.normalize(vector3.scale(.{
+    const forward = -vector3.normalize(.{
         @cos(x_rot) * @cos(y_rot),
-        @sin(x_rot),
+        -@sin(x_rot),
         @cos(x_rot) * @sin(y_rot),
-    }, -1));
-}
+    });
 
-pub fn pushData(camera: Camera, cmd_buf: gpu.CommandBuffer, aspect: f32) void {
-    const target = camera.getForwardVector() + camera.position;
+    std.log.info("{any}", .{forward});
+
+    const target = forward + camera.position;
 
     cmd_buf.pushVertexUniformData(0, mem.asBytes(&.{
         matrix.lookAt(camera.position, target, vector3.up),

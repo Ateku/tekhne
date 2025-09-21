@@ -61,7 +61,7 @@ export fn main() callconv(.spirv_fragment) void {
 
     const ambient = light.ambient * material.ambient;
 
-    const light_direction = vector3.normalize(light.position - position_in);
+    const light_direction = light.position - position_in;
     const diffuse_value = @max(vector3.dot(normal_in, light_direction), 0.0);
     const diffuse = light.diffuse * vector3.splat(diffuse_value) * material.diffuse;
 

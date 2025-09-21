@@ -46,6 +46,6 @@ export fn main() callconv(.spirv_vertex) void {
     const transformed_normal = matrix.mulVec(transform.mat, normalv4);
 
     position_out = vector3.fromVector4(model);
-    normal_out = vector3.normalize(vector3.fromVector4(transformed_normal));
+    normal_out = vector3.fromVector4(transformed_normal);
     tex_coord_out = tex_coord_in;
 }
