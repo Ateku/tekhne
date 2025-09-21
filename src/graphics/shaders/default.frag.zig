@@ -10,11 +10,6 @@ extern var tex_coord_in: @Vector(2, f32) addrspace(.input);
 
 extern var color_out: @Vector(4, f32) addrspace(.output);
 
-extern var material: extern struct {
-    ambient: @Vector(3, f32),
-    diffuse: @Vector(3, f32),
-} addrspace(.uniform);
-
 extern var light: extern struct {
     position: @Vector(3, f32),
     ambient: @Vector(3, f32),
@@ -45,8 +40,7 @@ fn sampler2d(
 }
 
 export fn main() callconv(.spirv_fragment) void {
-    gpu.binding(&material, 3, 0);
-    gpu.binding(&light, 3, 1);
+    gpu.binding(&light, 3, 0);
 
     gpu.location(&position_in, 0);
     gpu.location(&normal_in, 1);
@@ -54,11 +48,11 @@ export fn main() callconv(.spirv_fragment) void {
 
     gpu.location(&color_out, 0);
 
-    const ambient = light.ambient * material.ambient;
+    const ambient = light.ambient;
 
     const light_direction = vector3.normalize(light.position - position_in);
     const diffuse_value = @max(vector3.dot(normal_in, light_direction), 0.0);
-    const diffuse = light.diffuse * vector3.splat(diffuse_value) * material.diffuse;
+    const diffuse = light.diffuse * vector3.splat(diffuse_value);
 
     const light_result = diffuse + ambient;
 

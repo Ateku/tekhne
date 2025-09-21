@@ -10,7 +10,6 @@ const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
 const Transform = @import("core/Transform.zig");
 const Light = @import("graphics/Light.zig");
-const Material = @import("graphics/Material.zig");
 const math = @import("core/math.zig");
 
 const debug_mode = builtin.mode == .Debug;
@@ -81,11 +80,6 @@ pub fn main() !void {
         .diffuse = .{ 0.5, 0.5, 0.5 },
     };
 
-    const material: Material = .{
-        .ambient = .{ 1, 0.5, 0.31 },
-        .diffuse = .{ 1, 0.5, 0.31 },
-    };
-
     var camera: Camera = .new;
 
     const ms: f32 = 0.05;
@@ -145,7 +139,6 @@ pub fn main() !void {
             render_pass.bindGraphicsPipeline(graphic_pipeline);
 
             light.pushData(cmd_buf);
-            material.pushData(cmd_buf);
 
             transform.pushData(cmd_buf);
             asset.render(render_pass);

@@ -11,5 +11,5 @@ ambient: math.Vector3,
 diffuse: math.Vector3,
 
 pub fn pushData(light: Light, cmd_buf: gpu.CommandBuffer) void {
-    cmd_buf.pushFragmentUniformData(1, mem.asBytes(&.{light}));
+    cmd_buf.pushFragmentUniformData(0, mem.asBytes(&.{light}));
 }
