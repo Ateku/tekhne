@@ -10,17 +10,13 @@ extern var tex_coord_in: @Vector(2, f32) addrspace(.input);
 
 extern var color_out: @Vector(4, f32) addrspace(.output);
 
-extern var camera: extern struct {
-    position: @Vector(3, f32),
-} addrspace(.uniform);
-
-extern var light: extern struct {
-    position: @Vector(3, f32),
+extern var material: extern struct {
     ambient: @Vector(3, f32),
     diffuse: @Vector(3, f32),
 } addrspace(.uniform);
 
-extern var material: extern struct {
+extern var light: extern struct {
+    position: @Vector(3, f32),
     ambient: @Vector(3, f32),
     diffuse: @Vector(3, f32),
 } addrspace(.uniform);
@@ -49,9 +45,8 @@ fn sampler2d(
 }
 
 export fn main() callconv(.spirv_fragment) void {
-    gpu.binding(&camera, 3, 0);
+    gpu.binding(&material, 3, 0);
     gpu.binding(&light, 3, 1);
-    gpu.binding(&material, 3, 2);
 
     gpu.location(&position_in, 0);
     gpu.location(&normal_in, 1);
@@ -68,18 +63,4 @@ export fn main() callconv(.spirv_fragment) void {
     const light_result = diffuse + ambient;
 
     color_out = sampler2d(2, 0, tex_coord_in) * vector4.fromVector3(light_result, 1.0);
-}
-
-fn reflect(vector: @Vector(3, f32), normal: @Vector(3, f32)) @Vector(3, f32) {
-    return vector - vector3.splat(2.0) * vector3.splat(vector3.dot(normal, vector)) * normal;
-}
-
-fn pow(x: f32, y: usize) f32 {
-    if (y == 0) return 1;
-
-    var result: f32 = x;
-
-    for (1..y) |_| result *= x;
-
-    return result;
 }

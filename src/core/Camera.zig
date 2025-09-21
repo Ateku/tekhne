@@ -27,14 +27,10 @@ pub fn pushData(camera: Camera, cmd_buf: gpu.CommandBuffer, aspect: f32) void {
         @cos(x_rot) * @sin(y_rot),
     });
 
-    std.log.info("{any}", .{forward});
-
     const target = forward + camera.position;
 
     cmd_buf.pushVertexUniformData(0, mem.asBytes(&.{
         matrix.lookAt(camera.position, target, vector3.up),
         matrix.perspective(camera.fov, aspect, camera.near, camera.far),
     }));
-
-    cmd_buf.pushFragmentUniformData(0, mem.asBytes(&.{camera.position}));
 }
