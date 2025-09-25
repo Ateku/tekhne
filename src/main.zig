@@ -5,6 +5,7 @@ const shadercross = sdl3.shadercross;
 const gpu = sdl3.gpu;
 const video = sdl3.video;
 const events = sdl3.events;
+const keyboard = sdl3.keyboard;
 const pipeline = @import("graphics/pipeline.zig");
 const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
@@ -99,6 +100,8 @@ pub fn main() !void {
 
     var camera: Camera = .new;
 
+    const keyboard_state = keyboard.getState();
+
     loop: while (true) {
         const dt = capper.delay();
         _ = dt;
@@ -106,14 +109,8 @@ pub fn main() !void {
         while (events.poll()) |event| {
             switch (event) {
                 .quit, .terminating => break :loop,
-                .key_down => |keyboard| if (keyboard.key) |key| {
+                .key_down => |k| if (k.key) |key| {
                     switch (key) {
-                        .a => camera.position -= .{ ms, 0, 0 },
-                        .d => camera.position += .{ ms, 0, 0 },
-                        .space => camera.position += .{ 0, ms, 0 },
-                        .c => camera.position -= .{ 0, ms, 0 },
-                        .w => camera.position -= .{ 0, 0, ms },
-                        .s => camera.position += .{ 0, 0, ms },
                         .escape => break :loop,
                         else => {},
                     }
@@ -123,6 +120,21 @@ pub fn main() !void {
                 },
                 else => {},
             }
+        }
+
+        {
+            if (keyboard_state[getScancodePosition(.a)])
+                camera.position -= .{ ms, 0, 0 };
+            if (keyboard_state[getScancodePosition(.d)])
+                camera.position += .{ ms, 0, 0 };
+            if (keyboard_state[getScancodePosition(.space)])
+                camera.position += .{ 0, ms, 0 };
+            if (keyboard_state[getScancodePosition(.left_ctrl)])
+                camera.position -= .{ 0, ms, 0 };
+            if (keyboard_state[getScancodePosition(.w)])
+                camera.position -= .{ 0, 0, ms };
+            if (keyboard_state[getScancodePosition(.s)])
+                camera.position += .{ 0, 0, ms };
         }
 
         const cmd_buf = try device.acquireCommandBuffer();
@@ -173,4 +185,8 @@ pub fn main() !void {
 
         try cmd_buf.submit();
     }
+}
+
+fn getScancodePosition(key: sdl3.keycode.Keycode) usize {
+    return @intFromEnum(keyboard.getScancodeFromKey(key).?.code.?);
 }
