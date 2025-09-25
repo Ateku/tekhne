@@ -37,6 +37,7 @@ pub fn main() !void {
     try device.claimWindow(window);
     // set unlimited frames;
     try device.setSwapchainParameters(window, .sdr, .immediate);
+    try sdl3.mouse.setWindowRelativeMode(window, true);
 
     var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .unlimited = undefined } };
 
@@ -82,9 +83,10 @@ pub fn main() !void {
 
     var camera: Camera = .new;
 
-    const ms: f32 = 0.05;
     loop: while (true) {
-        std.log.info("{}", .{1 / capper.delay()});
+        const dt = capper.delay();
+        _ = dt;
+        const ms = 0.05;
         while (events.poll()) |event| {
             switch (event) {
                 .quit, .terminating => break :loop,
@@ -96,12 +98,12 @@ pub fn main() !void {
                         .c => camera.position -= .{ 0, ms, 0 },
                         .w => camera.position -= .{ 0, 0, ms },
                         .s => camera.position += .{ 0, 0, ms },
-                        .q => camera.rotation -= .{ 0, 1, 0 },
-                        .e => camera.rotation += .{ 0, 1, 0 },
-                        .z => camera.rotation += .{ 1, 0, 0 },
-                        .x => camera.rotation -= .{ 1, 0, 0 },
+                        .escape => break :loop,
                         else => {},
                     }
+                },
+                .mouse_motion => |mouse| {
+                    camera.rotation += .{ -mouse.y_rel * 0.1, mouse.x_rel * 0.1, 0 };
                 },
                 else => {},
             }
