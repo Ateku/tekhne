@@ -39,7 +39,7 @@ pub fn main() !void {
     try device.setSwapchainParameters(window, .sdr, .immediate);
     try sdl3.mouse.setWindowRelativeMode(window, true);
 
-    var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .unlimited = undefined } };
+    var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .limited = 60 } };
 
     const texture_format = try device.getSwapchainTextureFormat(window);
     const graphic_pipeline = try pipeline.initGraphics(
@@ -65,7 +65,7 @@ pub fn main() !void {
     const asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
     defer asset.release(device);
     var transform: Transform = .{
-        .position = .{ 0, 0, 0 },
+        .position = .{ -2, 0, 4 },
         .rotation = .{ 45, 0, 0 },
         .scale = .{ 1, 1, 1 },
     };
@@ -75,10 +75,26 @@ pub fn main() !void {
         .scale = .{ 1, 1, 1 },
     };
 
+    const cube_asset = try Asset.createFromPath(allocator, device, "assets/light.gltf");
+    defer cube_asset.release(device);
+    var cube_transform: Transform = .{
+        .position = .{ 0, 0, 0 },
+        .rotation = .{ 0, 0, 0 },
+        .scale = .{ 1, 1, 1 },
+    };
+
     const light: Light = .{
-        .position = .{ 0.0, 0.0, 3 },
+        .position = .{ 4, 1, 3 },
         .ambient = .{ 0.2, 0.2, 0.2 },
         .diffuse = .{ 0.5, 0.5, 0.5 },
+    };
+
+    const light_cube = try Asset.createFromPath(allocator, device, "assets/light.gltf");
+    defer light_cube.release(device);
+    var light_transform: Transform = .{
+        .position = .{ 4, 1, 3 },
+        .rotation = .{ 0, 0, 0 },
+        .scale = .{ 0.2, 0.2, 0.2 },
     };
 
     var camera: Camera = .new;
@@ -147,6 +163,12 @@ pub fn main() !void {
 
             transform2.pushData(cmd_buf);
             asset.render(render_pass);
+
+            light_transform.pushData(cmd_buf);
+            light_cube.render(render_pass);
+
+            cube_transform.pushData(cmd_buf);
+            cube_asset.render(render_pass);
         }
 
         try cmd_buf.submit();

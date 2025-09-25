@@ -43,7 +43,7 @@ export fn main() callconv(.spirv_vertex) void {
     );
 
     // Smooth shading - use position_in rather than normal_in
-    const normalv4 = vector4.fromVector3(position_in, 0);
+    const normalv4 = vector4.fromVector3(normal_in, 0);
     const transformed_normal = matrix.mulVec(transform.mat, normalv4);
 
     position_out = vector3.fromVector4(model);
