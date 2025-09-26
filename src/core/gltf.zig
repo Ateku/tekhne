@@ -6,20 +6,44 @@ const mem = std.mem;
 const Allocator = mem.Allocator;
 const sdl3 = @import("sdl3");
 const gpu = sdl3.gpu;
-const Texture = @import("Texture.zig");
-const Model = @import("Model.zig");
-const Vertex = @import("Vertex.zig");
+const Texture = @import("../graphics/Texture.zig");
+const Model = @import("../graphics/Model.zig");
+const Node = @import("../world/Node.zig");
+const math = @import("math.zig");
 
-const Asset = @This();
+const Gltf = struct {
+    nodes: []Gltf.Node,
+    images: []Image,
+    bufferViews: []BufferView,
+    buffers: []Buffer,
 
-texture: Texture,
-model: Model,
+    pub const Node = struct {
+        translation: math.Vector3 = math.vector3.zero,
+        // Quaterion
+        // rotation: math.Vector3 = math.vector3.zero,
+        scale: math.Vector3 = math.vector3.one,
+    };
 
-pub fn createFromPath(
+    pub const Image = struct {
+        uri: []u8,
+    };
+
+    pub const BufferView = struct {
+        byteOffset: usize,
+        byteLength: usize,
+    };
+
+    pub const Buffer = struct {
+        uri: []u8,
+        byteLength: usize,
+    };
+};
+
+pub fn fromPath(
     allocator: Allocator,
     device: gpu.Device,
     path: []const u8,
-) !Asset {
+) !Node {
     const dir = blk: {
         if (mem.lastIndexOf(u8, path, "/")) |i|
             break :blk path[0 .. i + 1];
@@ -66,19 +90,11 @@ pub fn createFromPath(
     defer allocator.free(vertices);
 
     return .{
+        .position = value.nodes[0].translation,
+        .scale = value.nodes[0].scale,
         .texture = try Texture.createFromPath(device, texture_path),
         .model = try Model.create(device, vertices, indices),
     };
-}
-
-pub fn render(asset: Asset, render_pass: gpu.RenderPass) void {
-    asset.texture.bind(render_pass);
-    asset.model.render(render_pass);
-}
-
-pub fn release(asset: Asset, device: gpu.Device) void {
-    asset.texture.release(device);
-    asset.model.release(device);
 }
 
 fn readFile(allocator: Allocator, path: []const u8) ![]u8 {
@@ -103,8 +119,8 @@ fn getVertices(
     position: []const f32,
     normal: []const f32,
     tex_coord: []const f32,
-) ![]const Vertex {
-    const vertices = try allocator.alloc(Vertex, position.len / 3);
+) ![]const Model.Vertex {
+    const vertices = try allocator.alloc(Model.Vertex, position.len / 3);
 
     for (0..position.len / 3) |i| {
         vertices[i].position = .{ position[i * 3], position[i * 3 + 1], position[i * 3 + 2] };
@@ -121,24 +137,3 @@ fn readBuffer(comptime T: type, data: []const u8, bufferView: Gltf.BufferView) [
     const bytes = data[offset .. offset + length];
     return @alignCast(mem.bytesAsSlice(T, bytes));
 }
-
-const Gltf = struct {
-    nodes: []struct {},
-    images: []Image,
-    bufferViews: []BufferView,
-    buffers: []Buffer,
-
-    pub const Image = struct {
-        uri: []u8,
-    };
-
-    pub const BufferView = struct {
-        byteOffset: usize,
-        byteLength: usize,
-    };
-
-    pub const Buffer = struct {
-        uri: []u8,
-        byteLength: usize,
-    };
-};

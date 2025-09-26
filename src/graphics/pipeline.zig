@@ -1,7 +1,7 @@
 const sdl3 = @import("sdl3");
 const shadercross = sdl3.shadercross;
 const gpu = sdl3.gpu;
-const Vertex = @import("Vertex.zig");
+const Vertex = @import("Model.zig").Vertex;
 
 pub fn initGraphics(
     device: gpu.Device,

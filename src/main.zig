@@ -7,11 +7,10 @@ const video = sdl3.video;
 const events = sdl3.events;
 const keyboard = sdl3.keyboard;
 const pipeline = @import("graphics/pipeline.zig");
-const Asset = @import("graphics/Asset.zig");
 const Camera = @import("core/Camera.zig");
-const Transform = @import("core/Transform.zig");
 const Light = @import("graphics/Light.zig");
 const math = @import("core/math.zig");
+const gltf = @import("core/gltf.zig");
 
 const debug_mode = builtin.mode == .Debug;
 
@@ -63,40 +62,29 @@ pub fn main() !void {
         .num_levels = 1,
     });
 
-    const asset = try Asset.createFromPath(allocator, device, "assets/test.gltf");
+    var asset = try gltf.fromPath(allocator, device, "assets/test.gltf");
     defer asset.release(device);
-    var transform: Transform = .{
-        .position = .{ -2, 0, 4 },
-        .rotation = .{ 45, 0, 0 },
-        .scale = .{ 1, 1, 1 },
-    };
-    var transform2: Transform = .{
-        .position = .{ 3, 2, 0 },
-        .rotation = .{ 0, 0, 0 },
-        .scale = .{ 1, 1, 1 },
-    };
+    asset.position = .{ -2, 0, 4 };
+    asset.rotation = .{ 45, 0, 0 };
 
-    const cube_asset = try Asset.createFromPath(allocator, device, "assets/light.gltf");
+    var cube_asset = try gltf.fromPath(allocator, device, "assets/light.gltf");
     defer cube_asset.release(device);
-    var cube_transform: Transform = .{
-        .position = .{ 0, 0, 0 },
-        .rotation = .{ 0, 0, 0 },
-        .scale = .{ 1, 1, 1 },
-    };
+    cube_asset.scale = .{ 2, 2, 2 };
 
     const light: Light = .{
-        .position = .{ 4, 1, 3 },
+        .position = .{ 0, 1, 3 },
         .ambient = .{ 0.2, 0.2, 0.2 },
         .diffuse = .{ 0.5, 0.5, 0.5 },
     };
 
-    const light_cube = try Asset.createFromPath(allocator, device, "assets/light.gltf");
+    var light_cube = try gltf.fromPath(allocator, device, "assets/light.gltf");
     defer light_cube.release(device);
-    var light_transform: Transform = .{
-        .position = .{ 4, 1, 3 },
-        .rotation = .{ 0, 0, 0 },
-        .scale = .{ 0.2, 0.2, 0.2 },
-    };
+    light_cube.position = .{ 0, 1, 3 };
+    light_cube.rotation = .{ 0, 0, 0 };
+    light_cube.scale = .{ 0.2, 0.2, 0.2 };
+
+    var grid = try gltf.fromPath(allocator, device, "assets/grid.gltf");
+    defer grid.release(device);
 
     var camera: Camera = .new;
 
@@ -170,17 +158,10 @@ pub fn main() !void {
 
             light.pushData(cmd_buf);
 
-            transform.pushData(cmd_buf);
-            asset.render(render_pass);
-
-            transform2.pushData(cmd_buf);
-            asset.render(render_pass);
-
-            light_transform.pushData(cmd_buf);
-            light_cube.render(render_pass);
-
-            cube_transform.pushData(cmd_buf);
-            cube_asset.render(render_pass);
+            asset.render(cmd_buf, render_pass);
+            cube_asset.render(cmd_buf, render_pass);
+            light_cube.render(cmd_buf, render_pass);
+            // grid.render(cmd_buf, render_pass);
         }
 
         try cmd_buf.submit();

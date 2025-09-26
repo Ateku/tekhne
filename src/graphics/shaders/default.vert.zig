@@ -12,10 +12,12 @@ extern var tex_coord_in: @Vector(2, f32) addrspace(.input);
 extern var position_out: @Vector(3, f32) addrspace(.output);
 extern var normal_out: @Vector(3, f32) addrspace(.output);
 extern var tex_coord_out: @Vector(2, f32) addrspace(.output);
+extern var camera_pos_out: @Vector(3, f32) addrspace(.output);
 
 extern var camera: extern struct {
     view: math.Matrix,
     projection: math.Matrix,
+    position: math.Vector4,
 } addrspace(.uniform);
 
 extern var transform: extern struct {
@@ -33,6 +35,7 @@ export fn main() callconv(.spirv_vertex) void {
     gpu.location(&position_out, 0);
     gpu.location(&normal_out, 1);
     gpu.location(&tex_coord_out, 2);
+    gpu.location(&camera_pos_out, 3);
 
     const position: @Vector(4, f32) = .{ position_in[0], position_in[1], position_in[2], 1 };
     const model = matrix.mulVec(transform.mat, position);
@@ -48,4 +51,5 @@ export fn main() callconv(.spirv_vertex) void {
     position_out = vector3.fromVector4(model);
     normal_out = vector3.normalize(vector3.fromVector4(transformed_normal));
     tex_coord_out = tex_coord_in;
+    camera_pos_out = vector3.fromVector4(camera.position);
 }

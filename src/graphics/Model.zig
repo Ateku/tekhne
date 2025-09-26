@@ -2,9 +2,14 @@ const std = @import("std");
 const mem = std.mem;
 const sdl3 = @import("sdl3");
 const gpu = sdl3.gpu;
-const Vertex = @import("Vertex.zig");
 
 const Model = @This();
+
+pub const Vertex = struct {
+    position: @Vector(3, f32),
+    normal: @Vector(3, f32),
+    tex_coord: @Vector(2, f32),
+};
 
 vertex_buffer: gpu.Buffer,
 index_buffer: gpu.Buffer,
