@@ -11,11 +11,16 @@ extern var camera_pos_in: @Vector(3, f32) addrspace(.input);
 
 extern var color_out: @Vector(4, f32) addrspace(.output);
 
-extern var light: extern struct {
-    position: @Vector(3, f32),
+const Light = extern struct {
+    position: @Vector(4, f32),
+    direction: @Vector(4, f32),
+    properties: @Vector(4, f32),
     ambient: @Vector(3, f32),
     diffuse: @Vector(3, f32),
-} addrspace(.uniform);
+    specular: @Vector(3, f32),
+};
+
+extern var light: Light addrspace(.uniform);
 
 fn sampler2d(
     comptime set: u32,
@@ -50,21 +55,81 @@ export fn main() callconv(.spirv_fragment) void {
 
     gpu.location(&color_out, 0);
 
-    const ambient = light.ambient;
-
-    const light_direction = vector3.normalize(light.position - position_in);
-    const diffuse_value = @max(vector3.dot(normal_in, light_direction), 0.0);
-    const diffuse = light.diffuse * vector3.splat(diffuse_value);
-
-    const view_direction = vector3.normalize(camera_pos_in - position_in);
-    const reflect_direction = reflect(-light_direction, normal_in);
-    const max_direction = @max(vector3.dot(view_direction, reflect_direction), 0.0);
-    const specular_value = pow(max_direction, 16);
-    const specular = vector3.splat(0.5) * vector3.splat(specular_value);
-
-    const light_result = ambient + diffuse + specular;
+    const light_result = blk: {
+        if (light.direction[3] == -1)
+            break :blk calculateDirectional();
+        if (light.direction[3] == -2)
+            break :blk calculatePoint();
+        break :blk calculateSpotlight();
+    };
 
     color_out = sampler2d(2, 0, tex_coord_in) * vector4.fromVector3(light_result, 1.0);
+}
+
+fn calculateDirectional() @Vector(3, f32) {
+    const light_direction = vector3.fromVector4(light.direction);
+    const diffuse = calculateDiffuse(light_direction);
+    const specular = calculateSpecular(light_direction);
+
+    return light.ambient + diffuse + specular;
+}
+
+fn calculatePoint() @Vector(3, f32) {
+    const light_position = vector3.fromVector4(light.position);
+    const light_direction = vector3.normalize(light_position - position_in);
+
+    const attenuation = calculateAttenuation(light_position);
+
+    const diffuse = calculateDiffuse(light_direction) * attenuation;
+    const specular = calculateSpecular(light_direction) * attenuation;
+
+    return light.ambient * attenuation + diffuse + specular;
+}
+
+fn calculateSpotlight() @Vector(3, f32) {
+    const light_position = vector3.fromVector4(light.position);
+    const light_direction_pos = vector3.normalize(light_position - position_in);
+    const light_direction = vector3.normalize(vector3.fromVector4(light.direction));
+
+    const cut_off = light.position[3];
+    const outer_cut_off = light.direction[3];
+
+    const theta = vector3.dot(-light_direction_pos, -light_direction);
+    const epsilon = cut_off - outer_cut_off;
+    const intensity = vector3.splat(@max(0.0, @min((theta - outer_cut_off) / epsilon, 1.0)));
+
+    const attenuation = calculateAttenuation(light_position);
+
+    const diffuse = calculateDiffuse(light_direction_pos) * intensity * attenuation;
+    const specular = calculateSpecular(light_direction_pos) * intensity * attenuation;
+
+    return light.ambient * attenuation + diffuse + specular;
+}
+
+fn calculateDiffuse(direction: @Vector(3, f32)) @Vector(3, f32) {
+    const diffuse_value = @max(vector3.dot(normal_in, direction), 0.0);
+
+    return light.diffuse * vector3.splat(diffuse_value);
+}
+
+fn calculateSpecular(direction: @Vector(3, f32)) @Vector(3, f32) {
+    const view_direction = vector3.normalize(camera_pos_in - position_in);
+    const reflect_direction = reflect(-direction, normal_in);
+    const max_direction = @max(vector3.dot(view_direction, reflect_direction), 0.0);
+    const specular_value = pow(max_direction, 16);
+
+    return light.specular * vector3.splat(specular_value);
+}
+
+fn calculateAttenuation(light_position: @Vector(3, f32)) @Vector(3, f32) {
+    const constant = vector3.splat(light.properties[0]);
+    const linear = vector3.splat(light.properties[1]);
+    const quadratic = vector3.splat(light.properties[2]);
+
+    const distance = vector3.splat(vector3.magnitude(light_position - position_in));
+    const distance_sq = distance * distance;
+
+    return vector3.splat(1) / (constant + linear * distance + quadratic * distance_sq);
 }
 
 fn reflect(vector: @Vector(3, f32), normal: @Vector(3, f32)) @Vector(3, f32) {

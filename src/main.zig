@@ -39,7 +39,7 @@ pub fn main() !void {
     try device.setSwapchainParameters(window, .sdr, .immediate);
     try sdl3.mouse.setWindowRelativeMode(window, true);
 
-    var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .limited = 60 } };
+    var capper: sdl3.extras.FramerateCapper(f32) = .{ .mode = .{ .unlimited = undefined } };
 
     const texture_format = try device.getSwapchainTextureFormat(window);
     const graphic_pipeline = try pipeline.initGraphics(
@@ -67,19 +67,35 @@ pub fn main() !void {
     asset.position = .{ -2, 0, 4 };
     asset.rotation = .{ 45, 0, 0 };
 
+    var assett = try gltf.fromPath(allocator, device, "assets/test.gltf");
+    defer assett.release(device);
+    assett.position = .{ -10, 0, 4 };
+    assett.rotation = .{ 45, 0, 0 };
+
     var cube_asset = try gltf.fromPath(allocator, device, "assets/light.gltf");
     defer cube_asset.release(device);
     cube_asset.scale = .{ 2, 2, 2 };
 
     const light: Light = .{
-        .position = .{ 0, 1, 3 },
+        .position = .{ 0, 0, 5 },
         .ambient = .{ 0.2, 0.2, 0.2 },
         .diffuse = .{ 0.5, 0.5, 0.5 },
+        .specular = .{ 1.0, 1.0, 1.0 },
+        .kind = .{
+            .spotlight = .{
+                .direction = .{ 0, 0, 1 },
+                .cut_off = @cos(std.math.degreesToRadians(25)),
+                .outer_cut_off = @cos(std.math.degreesToRadians(35)),
+                .constant = 1.0,
+                .linear = 0.007,
+                .quadratic = 0.0002,
+            },
+        },
     };
 
     var light_cube = try gltf.fromPath(allocator, device, "assets/light.gltf");
     defer light_cube.release(device);
-    light_cube.position = .{ 0, 1, 3 };
+    light_cube.position = .{ 0, 0, 5 };
     light_cube.rotation = .{ 0, 0, 0 };
     light_cube.scale = .{ 0.2, 0.2, 0.2 };
 
@@ -92,8 +108,8 @@ pub fn main() !void {
 
     loop: while (true) {
         const dt = capper.delay();
-        _ = dt;
-        const ms = 0.05;
+        // std.log.info("{}", .{1 / dt});
+        const ms = 3 * dt;
         while (events.poll()) |event| {
             switch (event) {
                 .quit, .terminating => break :loop,
@@ -159,6 +175,7 @@ pub fn main() !void {
             light.pushData(cmd_buf);
 
             asset.render(cmd_buf, render_pass);
+            assett.render(cmd_buf, render_pass);
             cube_asset.render(cmd_buf, render_pass);
             light_cube.render(cmd_buf, render_pass);
             // grid.render(cmd_buf, render_pass);
