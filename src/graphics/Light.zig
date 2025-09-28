@@ -37,7 +37,7 @@ pub fn pushData(light: Light, cmd_buf: gpu.CommandBuffer) void {
         .directional => |d| cmd_buf.pushFragmentUniformData(0, mem.asBytes(&.{
             math.vector4.fromVector3(light.position, 0),
             math.vector4.fromVector3(d.direction, -1),
-            math.Vector4{ 0, 0, 0, 0 },
+            math.vector4.fromVector3(.{ 0, 0, 0 }, 0),
             light.ambient,
             light.diffuse,
             light.specular,
