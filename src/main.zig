@@ -30,7 +30,7 @@ pub fn main() !void {
     const device = try gpu.Device.init(shader_formats, debug_mode, null);
     defer device.deinit();
 
-    const window = try video.Window.init("Tekhne", 800, 600, .{
+    const window = try video.Window.init("Tekhne", 1280, 768, .{
         .vulkan = true,
     });
     defer window.deinit();
@@ -76,14 +76,16 @@ pub fn main() !void {
     defer cube_asset.release(device);
     cube_asset.scale = .{ 2, 2, 2 };
 
-    const light: Light = .{
-        .position = .{ 0, 0, 5 },
-        .ambient = .{ 0.2, 0.2, 0.2 },
+    var light: Light = .{
+        .position = .{ 0, 0, 20 },
         .diffuse = .{ 0.5, 0.5, 0.5 },
-        .specular = .{ 1.0, 1.0, 1.0 },
+        .specular = .{ 0.5, 0.5, 0.5 },
         .kind = .{
+            // .directional = .{
+            //     .direction = .{ 0, -1, 0 },
+            // },
             .spotlight = .{
-                .direction = .{ 0, 0, 1 },
+                .direction = .{ 0, 0.5, 1 },
                 .cut_off = @cos(std.math.degreesToRadians(25)),
                 .outer_cut_off = @cos(std.math.degreesToRadians(35)),
                 .constant = 1.0,
@@ -99,8 +101,10 @@ pub fn main() !void {
     light_cube.rotation = .{ 0, 0, 0 };
     light_cube.scale = .{ 0.2, 0.2, 0.2 };
 
-    var grid = try gltf.fromPath(allocator, device, "assets/grid.gltf");
-    defer grid.release(device);
+    var map = try gltf.fromPath(allocator, device, "assets/map.gltf");
+    defer map.release(device);
+    map.position = .{ 0, -10, 0 };
+    map.scale = .{ 100, 100, 100 };
 
     var camera: Camera = .new;
 
@@ -108,7 +112,7 @@ pub fn main() !void {
 
     loop: while (true) {
         const dt = capper.delay();
-        // std.log.info("{}", .{1 / dt});
+        std.log.info("{}", .{1 / dt});
         const ms = 3 * dt;
         while (events.poll()) |event| {
             switch (event) {
@@ -178,7 +182,7 @@ pub fn main() !void {
             assett.render(cmd_buf, render_pass);
             cube_asset.render(cmd_buf, render_pass);
             light_cube.render(cmd_buf, render_pass);
-            // grid.render(cmd_buf, render_pass);
+            map.render(cmd_buf, render_pass);
         }
 
         try cmd_buf.submit();

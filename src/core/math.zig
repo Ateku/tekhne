@@ -1,15 +1,5 @@
 pub const degreesToRadians = @import("std").math.degreesToRadians;
 
-pub fn sqrt(x: f32) f32 {
-    //TODO check and handle x <= 0
-    //TODO check and handle x == 0
-    var s = x; //initial guess
-    inline for (0..3) |_| {
-        s = (s + x / s) * 0.5;
-    }
-    return s;
-}
-
 pub const Vector3 = @Vector(3, f32);
 pub const vector3 = struct {
     pub const zero: Vector3 = .{ 0, 0, 0 };
@@ -38,7 +28,7 @@ pub const vector3 = struct {
     }
 
     pub fn magnitude(v: Vector3) f32 {
-        return sqrt(dot(v, v));
+        return @sqrt(dot(v, v));
     }
 
     pub fn magnitudeSquared(v: Vector3) f32 {
@@ -211,5 +201,35 @@ pub const matrix = struct {
 
     pub fn recompose(position: Vector3, rotation: Vector3, scalar: Vector3) Matrix {
         return mul(translate(position), mul(rotate(rotation), scale(scalar)));
+    }
+
+    pub fn invertTransform(t: Matrix) Matrix {
+        var r = identity;
+
+        r[0][0] = t[1][1] * t[2][2] - t[1][2] * t[2][1];
+        r[0][1] = t[0][1] * t[2][2] + t[0][2] * t[2][1];
+        r[0][2] = t[0][1] * t[1][2] - t[0][2] * t[1][1];
+
+        r[1][0] = t[1][0] * t[2][2] + t[1][2] * t[2][0];
+        r[1][1] = t[0][0] * t[2][2] - t[0][2] * t[2][0];
+        r[1][2] = t[0][0] * t[1][2] + t[0][2] * t[1][0];
+
+        r[2][0] = t[1][0] * t[2][1] - t[1][0] * t[2][0];
+        r[2][1] = t[0][0] * t[2][1] + t[0][1] * t[2][0];
+        r[2][2] = t[0][0] * t[1][1] - t[0][1] * t[1][0];
+
+        const det = 1.0 / (t[0][0] * r[0][0] + t[0][1] * r[1][0] + t[0][2] * r[2][0]);
+
+        r[0][0] *= det;
+        r[0][1] *= det;
+        r[0][2] *= det;
+        r[1][0] *= det;
+        r[1][1] *= det;
+        r[1][2] *= det;
+        r[2][0] *= det;
+        r[2][1] *= det;
+        r[2][2] *= det;
+
+        return r;
     }
 };

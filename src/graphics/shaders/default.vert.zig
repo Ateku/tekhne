@@ -4,24 +4,28 @@ const math = @import("math");
 const vector3 = math.vector3;
 const vector4 = math.vector4;
 const matrix = math.matrix;
+const Vector2 = @Vector(2, f32);
+const Vector3 = math.Vector3;
+const Vector4 = math.Vector4;
+const Matrix = math.Matrix;
 
-extern var position_in: @Vector(3, f32) addrspace(.input);
-extern var normal_in: @Vector(3, f32) addrspace(.input);
-extern var tex_coord_in: @Vector(2, f32) addrspace(.input);
+extern var position_in: Vector3 addrspace(.input);
+extern var normal_in: Vector3 addrspace(.input);
+extern var tex_coord_in: Vector2 addrspace(.input);
 
-extern var position_out: @Vector(3, f32) addrspace(.output);
-extern var normal_out: @Vector(3, f32) addrspace(.output);
-extern var tex_coord_out: @Vector(2, f32) addrspace(.output);
-extern var camera_pos_out: @Vector(3, f32) addrspace(.output);
+extern var position_out: Vector3 addrspace(.output);
+extern var normal_out: Vector3 addrspace(.output);
+extern var tex_coord_out: Vector2 addrspace(.output);
+extern var camera_pos_out: Vector3 addrspace(.output);
 
 extern var camera: extern struct {
-    view: math.Matrix,
-    projection: math.Matrix,
-    position: math.Vector4,
+    view: Matrix,
+    projection: Matrix,
+    position: Vector3,
 } addrspace(.uniform);
 
 extern var transform: extern struct {
-    mat: math.Matrix,
+    mat: Matrix,
 } addrspace(.uniform);
 
 export fn main() callconv(.spirv_vertex) void {
@@ -46,10 +50,11 @@ export fn main() callconv(.spirv_vertex) void {
     );
 
     const normalv4 = vector4.fromVector3(normal_in, 0);
-    const transformed_normal = matrix.mulVec(transform.mat, normalv4);
+    const inverted_mat = matrix.invertTransform(transform.mat);
+    const transformed_normal = matrix.mulVec(inverted_mat, normalv4);
 
     position_out = vector3.fromVector4(model);
-    normal_out = vector3.normalize(vector3.fromVector4(transformed_normal));
+    normal_out = vector3.fromVector4(transformed_normal);
     tex_coord_out = tex_coord_in;
-    camera_pos_out = vector3.fromVector4(camera.position);
+    camera_pos_out = camera.position;
 }

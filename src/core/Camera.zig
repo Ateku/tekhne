@@ -32,6 +32,6 @@ pub fn pushData(camera: Camera, cmd_buf: gpu.CommandBuffer, aspect: f32) void {
     cmd_buf.pushVertexUniformData(0, mem.asBytes(&.{
         matrix.lookAt(camera.position, target, vector3.up),
         matrix.perspective(camera.fov, aspect, camera.near, camera.far),
-        math.vector4.fromVector3(camera.position, 0),
+        camera.position,
     }));
 }
