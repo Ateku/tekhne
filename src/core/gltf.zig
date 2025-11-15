@@ -2,6 +2,7 @@ const std = @import("std");
 const fmt = std.fmt;
 const assert = std.debug.assert;
 const json = std.json;
+const Io = std.Io;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 const sdl3 = @import("sdl3");
@@ -44,13 +45,17 @@ pub fn fromPath(
     device: gpu.Device,
     path: []const u8,
 ) !Node {
+    var threaded = Io.Threaded.init(allocator);
+    defer threaded.deinit();
+    const io = threaded.io();
+
     const dir = blk: {
         if (mem.lastIndexOf(u8, path, "/")) |i|
             break :blk path[0 .. i + 1];
         break :blk "";
     };
 
-    const gltf = try readFileToJson(allocator, path);
+    const gltf = try readFileToJson(io, allocator, path);
     defer gltf.deinit();
     const value = gltf.value;
 
@@ -64,7 +69,7 @@ pub fn fromPath(
         );
         defer allocator.free(bin_path);
 
-        break :blk try readFile(allocator, bin_path);
+        break :blk try readFile(io, allocator, bin_path);
     };
     defer allocator.free(bin_data);
 
@@ -97,16 +102,16 @@ pub fn fromPath(
     };
 }
 
-fn readFile(allocator: Allocator, path: []const u8) ![]u8 {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
+fn readFile(io: Io, allocator: Allocator, path: []const u8) ![]u8 {
+    const file = try Io.Dir.cwd().openFile(io, path, .{});
+    defer file.close(io);
 
-    var reader = file.reader(&.{});
+    var reader = file.reader(io, &.{});
     return try reader.interface.allocRemaining(allocator, .unlimited);
 }
 
-fn readFileToJson(allocator: Allocator, path: []const u8) !json.Parsed(Gltf) {
-    const data = try readFile(allocator, path);
+fn readFileToJson(io: Io, allocator: Allocator, path: []const u8) !json.Parsed(Gltf) {
+    const data = try readFile(io, allocator, path);
     defer allocator.free(data);
 
     return try json.parseFromSlice(Gltf, allocator, data, .{

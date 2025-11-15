@@ -51,13 +51,13 @@ pub fn main() !void {
     );
     defer device.releaseGraphicsPipeline(graphic_pipeline);
 
-    const window_size = try window.getSize();
+    const width, const height = try window.getSize();
 
     const depth_texture = try device.createTexture(.{
         .format = .depth32_float,
         .usage = .{ .depth_stencil_target = true },
-        .width = @intCast(window_size.width),
-        .height = @intCast(window_size.height),
+        .width = @intCast(width),
+        .height = @intCast(height),
         .layer_count_or_depth = 1,
         .num_levels = 1,
     });
@@ -82,7 +82,7 @@ pub fn main() !void {
         .specular = .{ 0.5, 0.5, 0.5 },
         .kind = .{
             // .directional = .{
-            //     .direction = .{ 0, -1, 0 },
+            //     .direction = .{ 0, 1, 0 },
             // },
             .spotlight = .{
                 .direction = .{ 0, 0.5, 1 },
@@ -146,8 +146,8 @@ pub fn main() !void {
         }
 
         const cmd_buf = try device.acquireCommandBuffer();
-        const swapchain_texture = try cmd_buf.waitAndAcquireSwapchainTexture(window);
-        const texture = swapchain_texture.texture orelse continue :loop;
+        const swapchain_texture, _, _ = try cmd_buf.waitAndAcquireSwapchainTexture(window);
+        const texture = swapchain_texture orelse continue :loop;
 
         camera.pushData(cmd_buf, 1.333);
 
@@ -190,5 +190,6 @@ pub fn main() !void {
 }
 
 fn getScancodePosition(key: sdl3.keycode.Keycode) usize {
-    return @intFromEnum(keyboard.getScancodeFromKey(key).?.code.?);
+    const scancode, _ = keyboard.getScancodeFromKey(key) orelse unreachable; // Always right key.
+    return @intFromEnum(scancode orelse unreachable); // Always right key.
 }

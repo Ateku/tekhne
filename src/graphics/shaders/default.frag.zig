@@ -25,7 +25,9 @@ extern var light: extern struct {
     specular: Vector3,
 } addrspace(.uniform);
 
-export fn main() callconv(.spirv_fragment) void {
+export fn main() callconv(.{
+    .spirv_fragment = .{},
+}) void {
     gpu.binding(&light, 3, 0);
 
     gpu.location(&position_in, 0);

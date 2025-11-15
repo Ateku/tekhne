@@ -1,14 +1,8 @@
-const math = @import("math");
-const Vector2 = @Vector(2, f32);
-const Vector3 = math.Vector3;
-const Vector4 = math.Vector4;
-const Matrix = math.Matrix;
-
 pub fn sampler2d(
     comptime set: u32,
     comptime bind: u32,
-    uv: Vector2,
-) Vector4 {
+    uv: @Vector(2, f32),
+) @Vector(4, f32) {
     return asm volatile (
         \\%float          = OpTypeFloat 32
         \\%v4float        = OpTypeVector %float 4
@@ -20,7 +14,7 @@ pub fn sampler2d(
         \\                  OpDecorate %tex Binding $bind
         \\%loaded_sampler = OpLoad %sampler_type %tex
         \\%ret            = OpImageSampleImplicitLod %v4float %loaded_sampler %uv
-        : [ret] "" (-> Vector4),
+        : [ret] "" (-> @Vector(4, f32)),
         : [uv] "" (uv),
           [set] "c" (set),
           [bind] "c" (bind),
@@ -29,14 +23,14 @@ pub fn sampler2d(
 
 // TODO: Use this GLSL function until zig supports @sqrt
 pub fn normalize(
-    vec: Vector3,
-) Vector3 {
+    vec: anytype,
+) @TypeOf(vec) {
     return asm volatile (
         \\%glsl_ext       = OpExtInstImport "GLSL.std.450"
         \\%float          = OpTypeFloat 32
         \\%v3float        = OpTypeVector %float 3
         \\%ret            = OpExtInst %v3float %glsl_ext $inst %vec
-        : [ret] "" (-> Vector3),
+        : [ret] "" (-> @TypeOf(vec)),
         : [vec] "" (vec),
           [inst] "c" (69),
     );
@@ -61,7 +55,7 @@ pub fn pow(
 
 // TODO: Use this GLSL function until zig supports @sqrt
 pub fn length(
-    vec: Vector3,
+    vec: anytype,
 ) f32 {
     return asm volatile (
         \\%glsl_ext       = OpExtInstImport "GLSL.std.450"

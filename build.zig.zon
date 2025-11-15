@@ -6,7 +6,7 @@
     .dependencies = .{
         .sdl3 = .{
             .url = "https://codeload.github.com/Gota7/zig-sdl3/zip/refs/heads/shadercross",
-            .hash = "sdl3-0.1.1-NmT1Q2o_IQDLnKMtQKOj0Th-mlMsp26Q9EUbaosvc5EN",
+            .hash = "sdl3-0.1.5-NmT1Q_JjJgAaKyfJrLUcFU9VRNrOP1c5LGwHp8NEb59K",
         },
     },
     .paths = .{

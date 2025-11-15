@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -32,20 +32,26 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
     run_cmd.step.dependOn(b.getInstallStep());
 
-    try addShader(b, exe.root_module, "default.vert");
-    try addShader(b, exe.root_module, "default.frag");
+    addShader(b, exe.root_module, "default.vert");
+    addShader(b, exe.root_module, "default.frag");
 }
 
 fn addShader(
     b: *std.Build,
     module: *std.Build.Module,
     comptime name: []const u8,
-) !void {
+) void {
     const vulkan_target = b.resolveTargetQuery(.{
-        .cpu_arch = .spirv32,
+        .cpu_arch = .spirv64,
         .cpu_model = .{
-            .explicit = &std.Target.spirv.cpu.vulkan_v1_2,
+            .explicit = &std.Target.spirv.cpu.generic,
         },
+        .cpu_features_add = std.Target.spirv.featureSet(
+            &[_]std.Target.spirv.Feature{
+                .v1_6,
+                .denorm_preserve,
+            },
+        ),
         .os_tag = .vulkan,
         .ofmt = .spirv,
     });
@@ -62,7 +68,6 @@ fn addShader(
                 }) },
             },
         }),
-        .use_lld = false,
         .use_llvm = false,
     });
 
